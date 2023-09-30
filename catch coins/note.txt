@@ -1,0 +1,35 @@
+Player:
+    speed
+    length
+    colour
+    image
+    rect
+
+a new way to draw an object to a specific position:
+1. define a rectangular surface with specific width and height
+set.image = pygame.Surface((width, height))
+
+2. locate the rectangular surface
+self.rect = self.image.get_rect(center = (x, y))
+
+3. to draw the rectangular surface
+def draw(self):
+    pygame.draw.rect(screen, colour, rect)
+
+Sprite represents a game object.
+Game objects are usually inherited from Sprite class
+1. class ClassName(pygame.sprite.Sprite):
+2. add super().__init__() to the __init__() function
+3. must have two attributes: image, rect
+
+
+Collision Detection
+1. needs to define a group and add food objects to that group
+- foodGroup = pygame.sprite.Group()
+- foodGroup.add(food)
+
+2. needs to detect the collision between the plyer and that group
+-pygame.sprite.spritecollide(plyer, foodGroup, True)
+
+
+
