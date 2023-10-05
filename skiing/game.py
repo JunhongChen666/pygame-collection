@@ -1,39 +1,14 @@
 import pygame
 import os
+from cfg import *
+import random
+import time
 
-pygame.init()
-WIDTH = 640
-HEIGHT = 640
-#create a game window with a specific width and height
-screen = pygame.display.set_mode((WIDTH, HEIGHT))
-#create a name for the window
-pygame.display.set_caption("skiing")
-#define clock
-clock = pygame.time.Clock()
 
-WHITE = (255, 255, 255)
-BLACK = (0, 0, 0)
-GREEN = (68, 93, 72)
-BLUE = (100, 153, 233)
-
-PLAYER_IMG_1 = pygame.image.load(os.path.join(os.getcwd(), 'images/skier_forward.png'))
-PLAYER_IMG_2 = pygame.image.load(os.path.join(os.getcwd(), 'images/skier_right1.png'))
-PLAYER_IMG_3 = pygame.image.load(os.path.join(os.getcwd(), 'images/skier_right2.png'))
-PLAYER_IMG_4 = pygame.image.load(os.path.join(os.getcwd(), 'images/skier_fall.png'))
-PLAYER_IMG_5 = pygame.image.load(os.path.join(os.getcwd(), 'images/skier_left2.png'))
-PLAYER_IMG_6 = pygame.image.load(os.path.join(os.getcwd(), 'images/skier_left1.png'))
-PLAYER_IMGS = [PLAYER_IMG_1,PLAYER_IMG_2,PLAYER_IMG_3,PLAYER_IMG_4,PLAYER_IMG_5,PLAYER_IMG_6]
-
-TREE_IMG = pygame.image.load(os.path.join(os.getcwd(), 'images/tree.png'))
-FLAG_IMG = pygame.image.load(os.path.join(os.getcwd(), 'images/flag.png'))
-
-#print score
-score = 0
-scoreFont = pygame.font.Font(None, 50)
-def drawScore(score):
-    score = str(score)
-    score_text = scoreFont.render(score, True, BLACK, WHITE)
-    screen.blit(score_text, (0, 15))
+def drawScore(screen, scoreFont, score):
+    score = "score: "+str(score)
+    score_text = scoreFont.render(score, True, BLACK)
+    screen.blit(score_text, (0, 0))
 
 class Skier(pygame.sprite.Sprite):
     def __init__(self, x, y, images):
@@ -63,14 +38,16 @@ class Skier(pygame.sprite.Sprite):
 
     def set_fall(self):
         self.image = self.images[3]
+        self.rect = self.image.get_rect(center=self.rect.center)
 
     
     def set_forward(self):
         self.image = self.images[0]
         self.direction = 0
         self.speed = [self.direction, 6-abs(self.direction)*2]
+        self.rect = self.image.get_rect(center=self.rect.center)
 
-    def draw(self):
+    def draw(self, screen):
         screen.blit(self.image, self.rect)
 
 class Obstacle(pygame.sprite.Sprite):
@@ -79,30 +56,54 @@ class Obstacle(pygame.sprite.Sprite):
         self.image = image
         self.rect = self.image.get_rect(center = (x, y))
         self.type = type
-    
-
+        self.passed = False
+        
     def move(self, speed):
         self.rect.centery = self.rect.centery-speed
 
-    def draw(self):
+    def draw(self,screen):
         screen.blit(self.image, self.rect)
 
-def create_obstacles():
+def create_obstacles(round, num = 10):
     obstacles = pygame.sprite.Group()
-    obstacle = Obstacle(WIDTH/2, HEIGHT, TREE_IMG, "tree")
-    obstacles.add(obstacle)
+    locations = []
+    if round ==1:
+        s = 0
+        e = 9
+    else:
+        s = 10
+        e = 19
+    for i in range(num):
+        row = random.randint(s, e)
+        col = random.randint(0, 9)
+        x, y = (col * 64 + 20, row * 64 + 20)
+        if (x, y) not in locations:
+            locations.append((x, y))
+            type = None
+            IMG = None
+            if random.randint(0, 1) == 1:
+                type = 1
+                IMG = TREE_IMG
+            else:
+                type = 0
+                IMG = FLAG_IMG
+            obstacle = Obstacle(x, y, IMG, type)
+            obstacles.add(obstacle)
     return obstacles
 
-
-
-    
-        
+def combine_obstacles(obstacles1, obstacles2):
+    obstacles = pygame.sprite.Group()
+    for obstacle in obstacles1:
+        obstacles.add(obstacle)
+    for obstacle in obstacles2:
+        obstacles.add(obstacle)
+    return obstacles
 
 
 '''
 start interface
 '''
-def show_start_interface():
+def show_start_interface(screen, WIDTH):
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -123,36 +124,87 @@ def show_start_interface():
         screen.blit(content, content_rect)
         pygame.display.update()
 
-
-show_start_interface()
-obstacles = create_obstacles()
-skier = Skier(WIDTH/2, 100, PLAYER_IMGS)
-distance = 0
-running = True
-while running:
-    clock.tick(60)
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            running = False
-        elif event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_a or event.key == pygame.K_LEFT:
-                skier.turn(-1)
-            elif event.key == pygame.K_d or event.key == pygame.K_RIGHT:
-                skier.turn(1)
-    screen.fill(WHITE)
-    skier.move()
-    skier.draw()
-    speed = skier.speed[1]
-    print(speed)
-    for obstacle in obstacles:
-        obstacle.move(speed)
-        obstacle.draw()
+def redraw_screen(screen, skier, obstacles, scoreFont, score):
+        screen.fill(WHITE)
+        skier.draw(screen)
+        for obstacle in obstacles:
+            if not (obstacle.type == 0 and obstacle.passed):
+                obstacle.draw(screen)
+        drawScore(screen, scoreFont, score)
+        pygame.display.update()
 
 
+def main():
+    pygame.init()
+    WIDTH = 640
+    HEIGHT = 640
+    #create a game window with a specific width and height
+    screen = pygame.display.set_mode((WIDTH, HEIGHT))
+    #create a name for the window
+    pygame.display.set_caption("skiing")
+    #define clock
+    clock = pygame.time.Clock()
+    #print score
+    score = 0
+    scoreFont = pygame.font.Font(None, 35)
+    show_start_interface(screen, WIDTH)
+    obstacles1 = pygame.sprite.Group()
+    obstacles2 = create_obstacles(2)
+    obstacles = combine_obstacles(obstacles1, obstacles2)
+    skier = Skier(WIDTH/2, 100, PLAYER_IMGS)
+    distance = 0
+    flag = True
+    running = True
+    while running:
+        clock.tick(60)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_a or event.key == pygame.K_LEFT:
+                    skier.turn(-1)
+                elif event.key == pygame.K_d or event.key == pygame.K_RIGHT:
+                    skier.turn(1)
+        skier.move()
+        speed = skier.speed[1]
+        distance = distance + speed
+        if distance>=640 and flag:
+            flag = not flag
+            obstacles1 = create_obstacles(2)
+            obstacles = combine_obstacles(obstacles1, obstacles2)
+        if distance>=1280 and not flag:
+            flag = not flag
+            obstacles2 = create_obstacles(2)
+            obstacles = combine_obstacles(obstacles1, obstacles2)
+            distance = distance-1280
+        for obstacle in obstacles:
+            obstacle.move(speed)
+
+        #collision detection
+        hit_obstacles = pygame.sprite.spritecollide(skier, obstacles, False)
+
+        # when collisions happen, it will do the following things
+        for obstacle in hit_obstacles:
+
+            if obstacle.type == 0 and not obstacle.passed:
+                obstacle.passed = True
+                score +=10
+                obstacles.remove(obstacle)
+                redraw_screen(screen, skier, obstacles, scoreFont, score)
+
+            if obstacle.type == 1 and not obstacle.passed:
+                obstacle.passed = True
+                skier.set_fall() 
+                score -=50
+                redraw_screen(screen, skier, obstacles, scoreFont, score)
+                pygame.time.delay(1000)
+                skier.set_forward()
+            break
+
+        redraw_screen(screen, skier, obstacles, scoreFont, score)
+
+    pygame.quit()
 
 
-    
-    drawScore(score)
-    pygame.display.update()
-
-pygame.quit()
+if __name__=="__main__":
+    main()
