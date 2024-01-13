@@ -1,4 +1,5 @@
 import random
+import sys
 
 import pygame
 
@@ -58,35 +59,17 @@ def endInterface(left_score, right_score):
     font1 = pygame.font.Font(None, 50)
     font2 = pygame.font.Font(None, 30)
     text1 = 'Player on left won!' if left_score > right_score else 'Player on right won!'
-    text2 = 'Press ESCAPE to quit.'
-    text3 = 'Press ENTER to continue or play again.'
 
     text1 = font1.render(text1, True, WHITE)
-    text2 = font2.render(text2, True, WHITE)
-    text3 = font2.render(text3, True, WHITE)
 
     rect1 = text1.get_rect()
-    rect2 = text2.get_rect()
-    rect3 = text3.get_rect()
     rect1.center = ((WIDTH//2, HEIGHT//2-100))
-    rect2.center = ((WIDTH//2, HEIGHT//2+50))
-    rect3.center = ((WIDTH//2, HEIGHT//2+100))
     while True:
         screen.fill(BACKGROUND_COLOUR)
         screen.blit(text1, rect1)
-        screen.blit(text2, rect2)
-        screen.blit(text3, rect3)
-
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                pygame.quit()
                 return
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_RETURN:
-                    return
-                elif event.key == pygame.K_ESCAPE:
-                    pygame.quit()
-
 
         pygame.display.update()
 
@@ -184,6 +167,8 @@ while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
+            pygame.quit()
+            sys.exit()
     screen.fill(BACKGROUND_COLOUR)
 
     pressed_keys = pygame.key.get_pressed()
@@ -213,4 +198,4 @@ while running:
 
 endInterface(left_score, right_score)
 pygame.quit()
-
+sys.exit()
