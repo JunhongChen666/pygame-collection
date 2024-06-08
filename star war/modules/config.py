@@ -4,7 +4,8 @@ import os
 
 SCREENSIZE = (956, 560)
 
-FONTPATH = os.path.join(os.getcwd(), 'resources/font/font.ttf')
+FONTPATH=None
+# FONTPATH = os.path.join(os.getcwd(), 'resources/font/font.ttf')
 
 IMAGEPATHS = {
     'asteroid': os.path.join(os.getcwd(), 'resources/images/asteroid.png'),

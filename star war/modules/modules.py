@@ -3,6 +3,36 @@ import random
 import config as cfg
 import pygame
 
+class Game:
+    def setupPlayerGroup(self, num_player):
+        BULLET_IMG = pygame.image.load(cfg.IMAGEPATHS['bullet']).convert_alpha()
+        BULLET_IMG = pygame.transform.scale(BULLET_IMG, (10, 10))
+        RED_SHIP_IMG = pygame.image.load(cfg.IMAGEPATHS['red_ship']).convert_alpha()
+        RED_SHIP_IMG = pygame.transform.scale(RED_SHIP_IMG, (36, 36))
+        BLUE_SHIP_IMG = pygame.image.load(cfg.IMAGEPATHS['blue_ship']).convert_alpha()
+        BLUE_SHIP_IMG = pygame.transform.scale(BLUE_SHIP_IMG, (36, 36))
+        EXPLODE_IMG = pygame.image.load(cfg.IMAGEPATHS['ship_exploded']).convert_alpha()
+        
+        # initialize spaceship
+        player_group = pygame.sprite.Group()
+        player_group.add(Ship(RED_SHIP_IMG, EXPLODE_IMG, 1, BULLET_IMG))
+        if num_player == 2:
+            player_group.add(Ship(BLUE_SHIP_IMG, EXPLODE_IMG, 2, BULLET_IMG))
+        return player_group 
+    
+    def setupPlayer(self):
+        BULLET_IMG = pygame.image.load(cfg.IMAGEPATHS['bullet']).convert_alpha()
+        BULLET_IMG = pygame.transform.scale(BULLET_IMG, (10, 10))
+        RED_SHIP_IMG = pygame.image.load(cfg.IMAGEPATHS['red_ship']).convert_alpha()
+        RED_SHIP_IMG = pygame.transform.scale(RED_SHIP_IMG, (36, 36))
+        BLUE_SHIP_IMG = pygame.image.load(cfg.IMAGEPATHS['blue_ship']).convert_alpha()
+        BLUE_SHIP_IMG = pygame.transform.scale(BLUE_SHIP_IMG, (36, 36))
+        EXPLODE_IMG = pygame.image.load(cfg.IMAGEPATHS['ship_exploded']).convert_alpha()
+        
+        # initialize spaceship
+        ship = Ship(RED_SHIP_IMG, EXPLODE_IMG, 1, BULLET_IMG)
+        return ship 
+
 
 class Ship(pygame.sprite.Sprite):
     def __init__(self, image, explode_image, id, bullet_image):
@@ -13,9 +43,10 @@ class Ship(pygame.sprite.Sprite):
         self.bullet_image = bullet_image
         # position
         self.rect = self.image.get_rect()
-        self.rect.center = [random.randrange(18, 938), random.randrange(18, 520)]
+        self.rect.center = [random.randrange(18, 938), 500]
         #speed
-        self.speed = [10, 5]
+        self.base_speed = (10, 5)
+        self.speed = (0, 0)
         #player id
         self.player_id = id
         # shot cooldown time
@@ -27,16 +58,21 @@ class Ship(pygame.sprite.Sprite):
         bullet = Bullet(self.bullet_image, (self.rect.centerx, self.rect.centery - 8), self.player_id)
         return bullet
 
-    def move(self, direction):
-        if direction == 'LEFT':
-            self.rect.centerx = max(self.rect.centerx - self.speed[0], 18)
-        elif direction == 'RIGHT':
-            self.rect.centerx = min(self.rect.centerx + self.speed[0], 938)
-        elif direction == 'UP':
-            self.rect.centery = max(self.rect.centery - self.speed[0], 18)
-        elif direction == 'DOWN':
-            self.rect.centery = min(self.rect.centery + self.speed[0], 520)
+    def changeDirection(self, direction):
+        self.speed = (direction[0] * self.base_speed[0], direction[1] * self.base_speed[1])
 
+    def move(self):
+
+        old_centerx = self.rect.centerx
+        old_centery = self.rect.centery
+
+        self.rect.centerx = self.rect.centerx + self.speed[0]
+        self.rect.centery = self.rect.centery + self.speed[1]
+
+        if self.rect.centerx < 18 or 938 < self.rect.centerx:
+            self.rect.centerx = old_centerx
+        if self.rect.centery < 18 or 520 < self.rect.centery:
+            self.rect.centery = old_centery
 
     def explode(self, screen):
         #get the portion of the image

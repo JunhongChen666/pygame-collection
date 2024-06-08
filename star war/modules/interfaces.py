@@ -54,10 +54,9 @@ def show_end_interface(screen):
                 sys.exit()
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if button_1.is_clicked(pygame.mouse.get_pos()):
-                    return
+                    return True
                 elif button_2.is_clicked(pygame.mouse.get_pos()):
-                    pygame.quit()
-                    sys.exit()
+                    return False
 
         pygame.display.update()
 

@@ -1,44 +1,32 @@
 import config as cfg
 import pygame
 import sys
-from interfaces import show_end_interface, show_start_interface, draw_score
-from modules import Ship, Bullet, Asteroid
+from interfaces import *
+from modules import *
 
 
-def show_game_interface(screen, cfg, num_player):
+def show_game_interface(screen, game, num_player):
     # import back_ground image
     BG_IMG = pygame.image.load(cfg.IMAGEPATHS['seamless_space']).convert()
-    BULLET_IMG = pygame.image.load(cfg.IMAGEPATHS['bullet']).convert_alpha()
-    BULLET_IMG = pygame.transform.scale(BULLET_IMG, (10, 10))
-    RED_SHIP_IMG = pygame.image.load(cfg.IMAGEPATHS['red_ship']).convert_alpha()
-    RED_SHIP_IMG = pygame.transform.scale(RED_SHIP_IMG, (36, 36))
-    BLUE_SHIP_IMG = pygame.image.load(cfg.IMAGEPATHS['blue_ship']).convert_alpha()
-    BLUE_SHIP_IMG = pygame.transform.scale(BLUE_SHIP_IMG, (36, 36))
-    EXPLODE_IMG = pygame.image.load(cfg.IMAGEPATHS['ship_exploded']).convert_alpha()
     ASTEROID_IMG = pygame.image.load(cfg.IMAGEPATHS['asteroid']).convert_alpha()
 
     # define sprite groups
-    player_group = pygame.sprite.Group()
+    player_group = game.setupPlayerGroup(num_player)
     bullet_group = pygame.sprite.Group()
     asteroid_group = pygame.sprite.Group()
-
-    # initialize spaceship
-    player_group.add(Ship(RED_SHIP_IMG, EXPLODE_IMG, 1, BULLET_IMG))
-    if num_player == 2:
-        player_group.add(Ship(BLUE_SHIP_IMG, EXPLODE_IMG, 2, BULLET_IMG))
+    spawn_asteroid = pygame.USEREVENT+1
+    pygame.time.set_timer(spawn_asteroid, 1000)
 
     bg_move_dis = 0
 
-    #time interval for getnerating asteroids
-    asteroid_ticks = 90
-
     score_1 = 0
     score_2 = 0
-    # while loop
+
     clock = pygame.time.Clock()
     running = True
     while running:
         clock.tick(60)
+        #background image animation
         screen.blit(BG_IMG, (0, -BG_IMG.get_rect().height + bg_move_dis))
         screen.blit(BG_IMG, (0, bg_move_dis))
         bg_move_dis = (bg_move_dis + 2) % BG_IMG.get_rect().height
@@ -49,33 +37,38 @@ def show_game_interface(screen, cfg, num_player):
                 pygame.quit()
                 # terminate the program immediately
                 sys.exit()
+            if event.type == spawn_asteroid:
+                asteroid_group.add(Asteroid(ASTEROID_IMG))
 
         # detect player actions
         keys = pygame.key.get_pressed()
-        for idx, player in enumerate(player_group):
-            if idx==0:
+        for player in player_group:
+            if player.player_id==1:
                 if keys[pygame.K_RIGHT]:
-                    player.move("RIGHT")
+                    player.changeDirection([1, 0])
                 if keys[pygame.K_LEFT]:
-                    player.move("LEFT")
+                    player.changeDirection([-1, 0])
                 if keys[pygame.K_UP]:
-                    player.move("UP")
+                    player.changeDirection([0, 1])
                 if keys[pygame.K_DOWN]:
-                    player.move("DOWN")
+                    player.changeDirection([0, -1])
+                player.move()
+                player.changeDirection([0, 0])
                 if keys[pygame.K_l] and player.cooling_time==0:
                     bullet = player.shot()
                     bullet_group.add(bullet)
                     player.cooling_time = 20
-
-            if idx==1:
+            if player.player_id==2:
                 if keys[pygame.K_d]:
-                    player.move("RIGHT")
+                    player.changeDirection([1, 0])
                 if keys[pygame.K_a]:
-                    player.move("LEFT")
+                    player.changeDirection([-1, 0])
                 if keys[pygame.K_w]:
-                    player.move("UP")
+                    player.changeDirection([0, 1])
                 if keys[pygame.K_s]:
-                    player.move("DOWN")
+                    player.changeDirection([0, -1])
+                player.move()
+                player.changeDirection([0, 0])
                 if keys[pygame.K_SPACE] and player.cooling_time==0:
                     bullet = player.shot()
                     bullet_group.add(bullet)
@@ -89,7 +82,6 @@ def show_game_interface(screen, cfg, num_player):
             if pygame.sprite.spritecollide(player, asteroid_group, True, None):
                 player.explode_step =1
             elif player.explode_step > 0:
-                    
                 if player.explode_step <= 3:
                     player.explode(screen)
                 else:
@@ -112,11 +104,6 @@ def show_game_interface(screen, cfg, num_player):
             bullet.draw(screen)
 
         #deal with asteriods
-        if asteroid_ticks==0:
-            asteroid_group.add(Asteroid(ASTEROID_IMG))
-            asteroid_ticks = 90
-        else:
-            asteroid_ticks -=1
         for asteroid in asteroid_group:
             asteroid.move()
             asteroid.draw(screen)
@@ -125,21 +112,22 @@ def show_game_interface(screen, cfg, num_player):
         draw_score(screen, score_1, score_2)
         pygame.display.update()
 
-
 def main():
     pygame.init()
     screen = pygame.display.set_mode(cfg.SCREENSIZE)
     pygame.display.set_caption("star war")
-    num_player = show_start_interface(screen, )
-    print("num_player", 2)
+    num_player = show_start_interface(screen)
+    game = Game()
     running = True
     while running:
         if num_player == 1:
-            show_game_interface(screen, cfg, num_player)
+            show_game_interface(screen, game, num_player)
         elif num_player == 2:
-            show_game_interface(screen, cfg, num_player)
+            show_game_interface(screen, game, num_player)
 
-        show_end_interface(screen)
+        running = show_end_interface(screen)
+    pygame.quit()
+    sys.exit()
 
 
 if __name__ == '__main__':
