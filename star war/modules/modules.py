@@ -19,19 +19,6 @@ class Game:
         if num_player == 2:
             player_group.add(Ship(BLUE_SHIP_IMG, EXPLODE_IMG, 2, BULLET_IMG))
         return player_group 
-    
-    def setupPlayer(self):
-        BULLET_IMG = pygame.image.load(cfg.IMAGEPATHS['bullet']).convert_alpha()
-        BULLET_IMG = pygame.transform.scale(BULLET_IMG, (10, 10))
-        RED_SHIP_IMG = pygame.image.load(cfg.IMAGEPATHS['red_ship']).convert_alpha()
-        RED_SHIP_IMG = pygame.transform.scale(RED_SHIP_IMG, (36, 36))
-        BLUE_SHIP_IMG = pygame.image.load(cfg.IMAGEPATHS['blue_ship']).convert_alpha()
-        BLUE_SHIP_IMG = pygame.transform.scale(BLUE_SHIP_IMG, (36, 36))
-        EXPLODE_IMG = pygame.image.load(cfg.IMAGEPATHS['ship_exploded']).convert_alpha()
-        
-        # initialize spaceship
-        ship = Ship(RED_SHIP_IMG, EXPLODE_IMG, 1, BULLET_IMG)
-        return ship 
 
 
 class Ship(pygame.sprite.Sprite):
