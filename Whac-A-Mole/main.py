@@ -23,7 +23,7 @@ def startGame(screen, game, font):
     time_remain = 0
     while True:
         clock.tick(30)
-        time_remain = round((1000 - (pygame.time.get_ticks() - init_time)) / 1000.)
+        time_remain = round((60000 - (pygame.time.get_ticks() - init_time)) / 1000.)
         screen.blit(BGIMG, (0, 0))
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
